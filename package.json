@@ -10,13 +10,7 @@
   },
   "author": "CETENIS",
   "license": "MIT",
-  "engines": {
-    "node": ">=18.x"
-  },
   "devDependencies": {
     "vite": "^5.0.0"
-  },
-  "dependencies": {
-    "nodemailer": "^6.9.0"
   }
 }

@@ -37,13 +37,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Navbar background on scroll
     const navbar = document.querySelector('.navbar');
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 50) {
-            navbar.style.background = 'rgba(10, 10, 10, 0.98)';
-        } else {
-            navbar.style.background = 'rgba(10, 10, 10, 0.95)';
-        }
-    });
+    if (navbar) {
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(10, 10, 10, 0.98)';
+            } else {
+                navbar.style.background = 'rgba(10, 10, 10, 0.95)';
+            }
+        });
+    }
 
     // Contact form handling
     const contactForm = document.getElementById('contactForm');
@@ -66,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const phone = formData.get('phone');
             const message = formData.get('message');
             
-            // Send email using a backend service (simulated for now)
+            // Send email using mailto (always works)
             sendEmail({
                 name,
                 company,
@@ -74,10 +76,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 phone,
                 message
             }).then(() => {
-                showNotification('¡Mensaje enviado correctamente! Nos pondremos en contacto contigo pronto.', 'success');
+                showNotification('Se ha abierto tu aplicación de correo con el mensaje preparado. Por favor, envíalo desde allí.', 'success');
                 this.reset();
-            }).catch(() => {
-                showNotification('Error al enviar el mensaje. Por favor, inténtalo de nuevo.', 'error');
+            }).catch((error) => {
+                // Esto nunca debería pasar con mailto, pero por si acaso
+                showNotification('Se ha abierto tu aplicación de correo. Por favor, envía el mensaje desde allí.', 'info');
             }).finally(() => {
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
@@ -86,36 +89,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Email sending function using Vercel Functions
+// Email sending function using mailto (always works)
 async function sendEmail(data) {
-    try {
-        const response = await fetch('/api/send-email', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                name: data.name,
-                company: data.company,
-                email: data.email,
-                phone: data.phone,
-                message: data.message
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok && result.success) {
-            return result;
-        } else {
-            throw new Error(result.message || 'Error al enviar el formulario');
-        }
-    } catch (error) {
-        console.error('Error sending email:', error);
-        
-        // Fallback a mailto si falla la API
-        const subject = encodeURIComponent(`Consulta de ${data.company} - ${data.name}`);
-        const body = encodeURIComponent(`
+    // Crear enlace mailto con todos los datos del formulario
+    const subject = encodeURIComponent(`Consulta de ${data.company} - ${data.name}`);
+    const body = encodeURIComponent(`
 Nombre: ${data.name}
 Empresa: ${data.company}
 Email: ${data.email}
@@ -126,13 +104,15 @@ ${data.message}
 
 ---
 Enviado desde el formulario web de CETENIS
-        `.trim());
-        
-        const mailtoLink = `mailto:cetenis@cetenis.es?subject=${subject}&body=${body}`;
-        window.open(mailtoLink, '_blank');
-        
-        throw new Error('Se abrió tu cliente de correo como alternativa. Por favor, envía el email desde allí.');
-    }
+    `.trim());
+    
+    const mailtoLink = `mailto:cetenis@cetenis.es?subject=${subject}&body=${body}`;
+    
+    // Abrir la aplicación de correo
+    window.open(mailtoLink, '_blank');
+    
+    // Siempre devolver éxito
+    return Promise.resolve({ success: true, method: 'mailto' });
 }
 
 // Notification system
@@ -144,21 +124,38 @@ function showNotification(message, type = 'info') {
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
+    
+    // Icons for different types
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
     notification.innerHTML = `
         <div class="notification-content">
-            <span class="notification-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+            <span class="notification-icon">${icons[type] || icons.info}</span>
             <span class="notification-message">${message}</span>
             <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
         </div>
     `;
+    
+    // Colors for different types
+    const colors = {
+        success: '#28a745',
+        error: '#dc3545',
+        warning: '#ffc107',
+        info: '#007bff'
+    };
     
     // Add styles
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
-        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
-        color: white;
+        background: ${colors[type] || colors.info};
+        color: ${type === 'warning' ? '#000' : '#fff'};
         padding: 1rem 1.5rem;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -202,7 +199,7 @@ function showNotification(message, type = 'info') {
             .notification-close {
                 background: none;
                 border: none;
-                color: white;
+                color: inherit;
                 font-size: 1.2rem;
                 cursor: pointer;
                 margin-left: auto;
@@ -218,13 +215,17 @@ function showNotification(message, type = 'info') {
     // Add to page
     document.body.appendChild(notification);
     
-    // Auto remove after 5 seconds
+    // Auto remove after 7 seconds (longer for more complex messages)
     setTimeout(() => {
         if (notification.parentElement) {
-            notification.style.animation = 'slideOutRight 0.3s ease-out';
-            setTimeout(() => notification.remove(), 300);
+            notification.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 300);
         }
-    }, 4000);
+    }, 7000);
 }
 
  
