@@ -1,0 +1,27 @@
+{
+  "name": "cetenis-datacenter-website",
+  "version": "1.0.0",
+  "description": "Página web premium para CETENIS - Soluciones de Data Center de élite",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview --port 3000"
+  },
+  "keywords": [
+    "datacenter",
+    "cetenis",
+    "infrastructure",
+    "technology",
+    "premium"
+  ],
+  "author": "CETENIS",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+} 
