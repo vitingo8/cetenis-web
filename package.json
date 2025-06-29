@@ -19,9 +19,13 @@
   "author": "CETENIS",
   "license": "MIT",
   "devDependencies": {
-    "vite": "^5.0.0"
+    "vite": "^5.0.0",
+    "terser": "^5.0.0"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.0"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=18.0.0"
   }
-} 
+}

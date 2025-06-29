@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   root: '.',
-  base: '/web-cetenis/',
+  base: './',
   server: {
     port: 3000,
     open: true,
@@ -10,20 +10,11 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
-    minify: 'terser',
+    minify: 'esbuild',
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['vite']
-        }
+        manualChunks: undefined
       }
     }
-  },
-  css: {
-    devSourcemap: true
-  },
-  optimizeDeps: {
-    include: []
   }
 }) 

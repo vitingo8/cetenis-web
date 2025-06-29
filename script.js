@@ -86,47 +86,52 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Email sending function using Web3Forms (free service)
+// Email sending function using Vercel Functions
 async function sendEmail(data) {
     try {
-        const response = await fetch('https://api.web3forms.com/submit', {
+        const response = await fetch('/api/send-email', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                access_key: 'YOUR_WEB3FORMS_KEY', // Replace with your Web3Forms key
                 name: data.name,
                 company: data.company,
                 email: data.email,
                 phone: data.phone,
-                message: data.message,
-                subject: `Consulta de ${data.company} - ${data.name}`,
-                from_name: data.name,
-                to_email: 'cetenis@cetenis.es'
+                message: data.message
             })
         });
         
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        
         const result = await response.json();
         
-        if (result.success) {
+        if (response.ok && result.success) {
             return result;
         } else {
-            throw new Error('Form submission failed');
+            throw new Error(result.message || 'Error al enviar el formulario');
         }
     } catch (error) {
         console.error('Error sending email:', error);
         
-        // For now, we'll simulate success and log the data
-        console.log('Formulario enviado (modo demo):', data);
+        // Fallback a mailto si falla la API
+        const subject = encodeURIComponent(`Consulta de ${data.company} - ${data.name}`);
+        const body = encodeURIComponent(`
+Nombre: ${data.name}
+Empresa: ${data.company}
+Email: ${data.email}
+Teléfono: ${data.phone || 'No proporcionado'}
+
+Mensaje:
+${data.message}
+
+---
+Enviado desde el formulario web de CETENIS
+        `.trim());
         
-        // In a real scenario, you might want to store this data locally
-        // or show a message asking the user to contact directly
-        return Promise.resolve({ success: true, demo: true });
+        const mailtoLink = `mailto:cetenis@cetenis.es?subject=${subject}&body=${body}`;
+        window.open(mailtoLink, '_blank');
+        
+        throw new Error('Se abrió tu cliente de correo como alternativa. Por favor, envía el email desde allí.');
     }
 }
 
