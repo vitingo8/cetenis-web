@@ -1,26 +1,5 @@
-// ── EmailJS configuration ─────────────────────────────────────────────────────
-// Setup steps:
-//   1. Create a free account at https://www.emailjs.com
-//   2. Add an email service: Email Services → Add New Service → Outlook
-//      Use cetenis@cetenis.es as the SMTP account
-//   3. Create a template (Email Templates → Create New Template) with this body:
-//
-//      Subject: [Cetenis Web] {{category}} inquiry from {{from_name}}
-//
-//      Category: {{category}}
-//      Name:     {{from_name}}
-//      Email:    {{from_email}}
-//      Country:  {{country}}
-//
-//      {{message}}
-//
-//   4. Replace the three constants below with your real IDs:
-
-const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';    // Account → API Keys
-const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';    // Email Services → Service ID
-const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';   // Email Templates → Template ID
-
-window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+// Email is sent via /api/contact (Nodemailer + Outlook SMTP)
+// Set EMAIL_USER and EMAIL_PASS in your .env file
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 const modal     = document.getElementById('contactModal');
@@ -87,22 +66,28 @@ form.addEventListener('submit', async (e) => {
     loading.hidden = false;
     submitBtn.disabled = true;
 
-    const params = {
+    const payload = {
         category:   document.getElementById('cf-category').value,
         from_name:  document.getElementById('cf-name').value,
         from_email: document.getElementById('cf-email').value,
         country:    document.getElementById('cf-country').value,
         message:    document.getElementById('cf-message').value,
-        to_email:   'cetenis@cetenis.es',
     };
 
     try {
-        await window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
+        const res = await fetch('/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
+
         closeModal();
         resetForm();
         launchConfetti();
     } catch (err) {
-        console.error('EmailJS error:', err);
+        console.error('Contact form error:', err);
         alert('There was a problem sending your message. Please try again or email us at cetenis@cetenis.es');
     } finally {
         label.hidden   = false;

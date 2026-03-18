@@ -12,5 +12,8 @@
   "license": "MIT",
   "devDependencies": {
     "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "nodemailer": "^8.0.3"
   }
 }
