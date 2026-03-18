@@ -2,6 +2,7 @@
   "name": "cetenis-datacenter-website",
   "version": "1.0.0",
   "description": "Página web premium para CETENIS - Soluciones de Data Center de élite",
+  "type": "module",
   "main": "index.html",
   "scripts": {
     "dev": "vite",
