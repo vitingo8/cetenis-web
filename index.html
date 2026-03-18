@@ -4,59 +4,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CETENIS - Empowering Data</title>
-    <meta name="description" content="CETENIS - Líder en soluciones de Data Center y Cloud.">
+    <meta name="description" content="CETENIS - Hyperscale DC Infrastructure. The revolution of empowering data.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏢</text></svg>">
 </head>
 <body>
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="content-container">
-            <div class="brand-section">
-                <div class="logo">
-                    <img src="logo.png" alt="Cetenis Logo" class="logo-img">
-                </div>
-            </div>
-            
-            <div class="form-section">
-                <form class="contact-form" id="contactForm">
-                    <div class="form-group">
-                        <label for="name">Nombre Completo *</label>
-                        <input type="text" id="name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="company">Empresa *</label>
-                        <input type="text" id="company" name="company" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email *</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Teléfono</label>
-                        <input type="tel" id="phone" name="phone">
-                    </div>
-                    <div class="form-group">
-                        <label for="message">Mensaje *</label>
-                        <textarea id="message" name="message" rows="4" required placeholder="Cuéntanos sobre tus necesidades..."></textarea>
-                    </div>
-                    <button type="submit" class="btn-primary">Enviar Consulta</button>
-                </form>
+
+    <!-- Looping background video -->
+    <div class="video-backdrop">
+        <video class="video-bg" autoplay muted loop playsinline>
+            <source src="/cetenis.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="header">
+        <a href="#" class="logo-link">
+            <img src="/logo.png" alt="CETENIS" class="logo-img">
+        </a>
+        <nav class="nav">
+            <a href="#infrastructure">INFRASTRUCTURE</a>
+            <a href="#history">HISTORY</a>
+            <a href="#" data-open-contact>CONTACT</a>
+        </nav>
+    </header>
+
+    <!-- Hero -->
+    <main class="hero">
+        <div class="hero-inner">
+            <span class="hero-badge">HYPERSCALE DC INFRASTRUCTURE</span>
+            <h1 class="hero-title">The Revolution of<br>Empowering Data</h1>
+            <p class="hero-subtext">Next-generation data infrastructure in development, engineered for scalability, resilience, and ultra-low latency. We are shaping the next generation of global information hubs.</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn btn-primary" data-open-contact>CONTACT</a>
+                <a href="#tech-specs" class="btn btn-ghost">OUR CORE</a>
             </div>
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <span><strong>Cetenis SL</strong> | Email: <a href="mailto:cetenis@cetenis.es">cetenis@cetenis.es</a> | Teléfonos: <a href="tel:+34659977072">659 977 072</a> / <a href="tel:+34667211233">667 211 233</a></span>
-        </div>
-    </footer>
+    <!-- Bottom tagline -->
+    <div class="tagline">
+        <span class="tagline-line"></span>
+        <span class="tagline-text">CETENIS | EMPOWERING DATA</span>
+    </div>
 
+    <!-- Contact Modal -->
+    <div id="contactModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal">
+            <button class="modal-close" id="modalClose" aria-label="Close">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M14 4L4 14M4 4l10 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </button>
+            <p class="modal-eyebrow">CETENIS</p>
+            <h2 class="modal-title" id="modalTitle">Get in Touch</h2>
+            <div class="modal-tabs" role="tablist">
+                <button class="modal-tab active" data-tab="Investor" role="tab" aria-selected="true">Investor</button>
+                <button class="modal-tab" data-tab="Government" role="tab" aria-selected="false">Gov</button>
+                <button class="modal-tab" data-tab="DC Operator" role="tab" aria-selected="false">DC Operator</button>
+            </div>
+            <form id="contactForm" novalidate>
+                <input type="hidden" id="cf-category" name="category" value="Investor">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cf-name">Name <span>*</span></label>
+                        <input type="text" id="cf-name" name="name" placeholder="John Smith" required autocomplete="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="cf-country">Country <span>*</span></label>
+                        <input type="text" id="cf-country" name="country" placeholder="Spain" required autocomplete="country-name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="cf-email">Email <span>*</span></label>
+                    <input type="email" id="cf-email" name="email" placeholder="john@company.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label for="cf-message">Message <span>*</span></label>
+                    <textarea id="cf-message" name="message" rows="4" placeholder="Tell us about your interest in Cetenis…" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-submit" id="submitBtn">
+                    <span class="btn-label">Send Message</span>
+                    <span class="btn-loading" hidden>Sending…</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
     <script type="module" src="script.js"></script>
 </body>
-</html> 
+</html>

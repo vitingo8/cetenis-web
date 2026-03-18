@@ -1,231 +1,187 @@
-// Smooth scrolling for navigation links
-document.addEventListener('DOMContentLoaded', function() {
-    // Mobile menu toggle
-    const hamburger = document.querySelector('.hamburger');
-    const navMenu = document.querySelector('.nav-menu');
-    
-    if (hamburger) {
-        hamburger.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            hamburger.classList.toggle('active');
-        });
-    }
+// ── EmailJS configuration ─────────────────────────────────────────────────────
+// Setup steps:
+//   1. Create a free account at https://www.emailjs.com
+//   2. Add an email service: Email Services → Add New Service → Outlook
+//      Use cetenis@cetenis.es as the SMTP account
+//   3. Create a template (Email Templates → Create New Template) with this body:
+//
+//      Subject: [Cetenis Web] {{category}} inquiry from {{from_name}}
+//
+//      Category: {{category}}
+//      Name:     {{from_name}}
+//      Email:    {{from_email}}
+//      Country:  {{country}}
+//
+//      {{message}}
+//
+//   4. Replace the three constants below with your real IDs:
 
-    // Smooth scrolling for all anchor links
-    const links = document.querySelectorAll('a[href^="#"]');
-    links.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-            
-            if (targetElement) {
-                const offsetTop = targetElement.offsetTop - 80; // Account for fixed navbar
-                window.scrollTo({
-                    top: offsetTop,
-                    behavior: 'smooth'
-                });
-                
-                // Close mobile menu if open
-                if (navMenu.classList.contains('active')) {
-                    navMenu.classList.remove('active');
-                    hamburger.classList.remove('active');
-                }
-            }
-        });
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';    // Account → API Keys
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';    // Email Services → Service ID
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';   // Email Templates → Template ID
+
+window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+const modal     = document.getElementById('contactModal');
+const closeBtn  = document.getElementById('modalClose');
+const form      = document.getElementById('contactForm');
+const submitBtn = document.getElementById('submitBtn');
+
+function openModal() {
+    modal.setAttribute('aria-hidden', 'false');
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    modal.querySelector('input:not([type="hidden"])').focus();
+}
+
+function closeModal() {
+    modal.setAttribute('aria-hidden', 'true');
+    modal.classList.remove('is-open');
+    document.body.style.overflow = '';
+}
+
+closeBtn.addEventListener('click', closeModal);
+
+modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+});
+
+// ── Open triggers ─────────────────────────────────────────────────────────────
+document.querySelectorAll('[data-open-contact]').forEach(el => {
+    el.addEventListener('click', (e) => {
+        e.preventDefault();
+        openModal();
     });
+});
 
-    // Navbar background on scroll
-    const navbar = document.querySelector('.navbar');
-    if (navbar) {
-        window.addEventListener('scroll', function() {
-            if (window.scrollY > 50) {
-                navbar.style.background = 'rgba(10, 10, 10, 0.98)';
-            } else {
-                navbar.style.background = 'rgba(10, 10, 10, 0.95)';
-            }
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.modal-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.modal-tab').forEach(t => {
+            t.classList.remove('active');
+            t.setAttribute('aria-selected', 'false');
         });
+        tab.classList.add('active');
+        tab.setAttribute('aria-selected', 'true');
+        document.getElementById('cf-category').value = tab.dataset.tab;
+    });
+});
+
+// ── Form submit ───────────────────────────────────────────────────────────────
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
     }
 
-    // Contact form handling
-    const contactForm = document.getElementById('contactForm');
-    
-    if (contactForm) {
-        contactForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Show loading state
-            const submitBtn = this.querySelector('.btn-primary');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Enviando...';
-            submitBtn.disabled = true;
-            
-            // Get form data
-            const formData = new FormData(this);
-            const name = formData.get('name');
-            const company = formData.get('company');
-            const email = formData.get('email');
-            const phone = formData.get('phone');
-            const message = formData.get('message');
-            
-            // Send email using mailto (always works)
-            sendEmail({
-                name,
-                company,
-                email,
-                phone,
-                message
-            }).then(() => {
-                showNotification('Se ha abierto tu aplicación de correo con el mensaje preparado. Por favor, envíalo desde allí.', 'success');
-                this.reset();
-            }).catch((error) => {
-                // Esto nunca debería pasar con mailto, pero por si acaso
-                showNotification('Se ha abierto tu aplicación de correo. Por favor, envía el mensaje desde allí.', 'info');
-            }).finally(() => {
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-            });
-        });
+    const label   = submitBtn.querySelector('.btn-label');
+    const loading = submitBtn.querySelector('.btn-loading');
+    label.hidden   = true;
+    loading.hidden = false;
+    submitBtn.disabled = true;
+
+    const params = {
+        category:   document.getElementById('cf-category').value,
+        from_name:  document.getElementById('cf-name').value,
+        from_email: document.getElementById('cf-email').value,
+        country:    document.getElementById('cf-country').value,
+        message:    document.getElementById('cf-message').value,
+        to_email:   'cetenis@cetenis.es',
+    };
+
+    try {
+        await window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params);
+        closeModal();
+        resetForm();
+        launchConfetti();
+    } catch (err) {
+        console.error('EmailJS error:', err);
+        alert('There was a problem sending your message. Please try again or email us at cetenis@cetenis.es');
+    } finally {
+        label.hidden   = false;
+        loading.hidden = true;
+        submitBtn.disabled = false;
     }
 });
 
-// Email sending function using mailto (always works)
-async function sendEmail(data) {
-    // Crear enlace mailto con todos los datos del formulario
-    const subject = encodeURIComponent(`Consulta de ${data.company} - ${data.name}`);
-    const body = encodeURIComponent(`
-Nombre: ${data.name}
-Empresa: ${data.company}
-Email: ${data.email}
-Teléfono: ${data.phone || 'No proporcionado'}
-
-Mensaje:
-${data.message}
-
----
-Enviado desde el formulario web de CETENIS
-    `.trim());
-    
-    const mailtoLink = `mailto:cetenis@cetenis.es?subject=${subject}&body=${body}`;
-    
-    // Abrir la aplicación de correo
-    window.open(mailtoLink, '_blank');
-    
-    // Siempre devolver éxito
-    return Promise.resolve({ success: true, method: 'mailto' });
+function resetForm() {
+    form.reset();
+    document.getElementById('cf-category').value = 'Investor';
+    document.querySelectorAll('.modal-tab').forEach((t, i) => {
+        t.classList.toggle('active', i === 0);
+        t.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+    });
 }
 
-// Notification system
-function showNotification(message, type = 'info') {
-    // Remove existing notifications
-    const existingNotifications = document.querySelectorAll('.notification');
-    existingNotifications.forEach(notification => notification.remove());
-    
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    
-    // Icons for different types
-    const icons = {
-        success: '✅',
-        error: '❌',
-        warning: '⚠️',
-        info: 'ℹ️'
-    };
-    
-    notification.innerHTML = `
-        <div class="notification-content">
-            <span class="notification-icon">${icons[type] || icons.info}</span>
-            <span class="notification-message">${message}</span>
-            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
-        </div>
-    `;
-    
-    // Colors for different types
-    const colors = {
-        success: '#28a745',
-        error: '#dc3545',
-        warning: '#ffc107',
-        info: '#007bff'
-    };
-    
-    // Add styles
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${colors[type] || colors.info};
-        color: ${type === 'warning' ? '#000' : '#fff'};
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        z-index: 10001;
-        max-width: 400px;
-        animation: slideInRight 0.3s ease-out;
-        font-family: 'Inter', sans-serif;
-        font-size: 0.9rem;
-    `;
-    
-    // Add animation styles if not already added
-    if (!document.getElementById('notification-styles')) {
-        const style = document.createElement('style');
-        style.id = 'notification-styles';
-        style.textContent = `
-            @keyframes slideInRight {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            @keyframes slideOutRight {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-            }
-            .notification-content {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
-            .notification-close {
-                background: none;
-                border: none;
-                color: inherit;
-                font-size: 1.2rem;
-                cursor: pointer;
-                margin-left: auto;
-                padding: 0 5px;
-            }
-            .notification-close:hover {
-                opacity: 0.7;
-            }
+// ── Confetti ──────────────────────────────────────────────────────────────────
+function launchConfetti() {
+    const container = document.createElement('div');
+    container.className = 'confetti-container';
+    document.body.appendChild(container);
+
+    const colors = ['#ffffff', '#d4d4d4', '#ffd700', '#93c5fd', '#fca5a5', '#86efac'];
+    const count  = 110;
+
+    for (let i = 0; i < count; i++) {
+        const size   = 5 + Math.random() * 9;
+        const color  = colors[Math.floor(Math.random() * colors.length)];
+        const spin   = (Math.random() > 0.5 ? '' : '-') + (300 + Math.random() * 400) + 'deg';
+        const dur    = 2.8 + Math.random() * 2.4;
+        const delay  = Math.random() * 1.8;
+        const left   = Math.random() * 100;
+        const isRect = Math.random() > 0.38;
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width',  String(size));
+        svg.setAttribute('height', String(size));
+        svg.style.cssText = `
+            position: absolute;
+            left: ${left}%;
+            top: -16px;
+            --spin: ${spin};
+            animation: confettiFall ${dur}s ${delay}s ease-in both;
         `;
-        document.head.appendChild(style);
-    }
-    
-    // Add to page
-    document.body.appendChild(notification);
-    
-    // Auto remove after 7 seconds (longer for more complex messages)
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.style.animation = 'slideOutRight 0.3s ease-in';
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 300);
+
+        if (isRect) {
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('width',  String(size));
+            rect.setAttribute('height', String(size * 0.45));
+            rect.setAttribute('fill',   color);
+            rect.setAttribute('rx',     '1');
+            svg.appendChild(rect);
+        } else {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', String(size / 2));
+            circle.setAttribute('cy', String(size / 2));
+            circle.setAttribute('r',  String(size / 2));
+            circle.setAttribute('fill', color);
+            svg.appendChild(circle);
         }
-    }, 7000);
+
+        container.appendChild(svg);
+    }
+
+    setTimeout(() => container.remove(), 6500);
 }
 
- 
+// ── Smooth scroll for anchor links ────────────────────────────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', function (e) {
+        const targetId = this.getAttribute('href');
+        if (targetId === '#' || this.hasAttribute('data-open-contact')) return;
+        e.preventDefault();
+        const target = document.querySelector(targetId);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+});
+
+// ── Ensure video plays ────────────────────────────────────────────────────────
+const video = document.querySelector('.video-bg');
+if (video) video.play().catch(() => {});
