@@ -34,6 +34,17 @@ html, body {
     min-height: 100%;
     object-fit: cover;
     will-change: auto;
+    pointer-events: none;
+}
+
+/* Ocultar el botón de play nativo de iOS Safari / webkit */
+.video-bg::-webkit-media-controls,
+.video-bg::-webkit-media-controls-panel,
+.video-bg::-webkit-media-controls-overlay-play-button,
+.video-bg::-webkit-media-controls-start-playback-button {
+    display: none !important;
+    -webkit-appearance: none;
+    appearance: none;
 }
 
 .video-overlay {
