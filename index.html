@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CETENIS - Empowering Data</title>
     <meta name="description" content="CETENIS - Hyperscale DC Infrastructure. The revolution of empowering data.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +15,7 @@
 
     <!-- Looping background video -->
     <div class="video-backdrop">
-        <video class="video-bg" autoplay muted loop playsinline>
+        <video class="video-bg" autoplay muted loop playsinline webkit-playsinline preload="auto">
             <source src="/cetenis.mp4" type="video/mp4">
         </video>
         <div class="video-overlay"></div>
@@ -27,7 +27,7 @@
             <img src="/logo.png" alt="CETENIS" class="logo-img">
         </a>
         <nav class="nav">
-            <a href="#infrastructure">INFRASTRUCTURE</a>
+            <a href="#infrastructure" class="nav-link-desktop">INFRASTRUCTURE</a>
             <a href="#history">HISTORY</a>
             <a href="#" data-open-contact>CONTACT</a>
         </nav>
@@ -92,6 +92,22 @@
                     <span class="btn-loading" hidden>Sending…</span>
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- Success popup (after email sent) -->
+    <div id="successDialog" class="success-dialog" role="alertdialog" aria-modal="true" aria-labelledby="successDialogTitle" aria-describedby="successDialogDesc" aria-hidden="true">
+        <div class="success-dialog__backdrop"></div>
+        <div class="success-dialog__panel">
+            <div class="success-dialog__check" aria-hidden="true">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 20l6 6 10-12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2 id="successDialogTitle" class="success-dialog__title">Message sent</h2>
+            <p id="successDialogDesc" class="success-dialog__text">Thank you for contacting CETENIS. We have received your message and will get back to you shortly.</p>
+            <button type="button" class="btn btn-primary success-dialog__btn" id="successDialogClose">OK</button>
         </div>
     </div>
 

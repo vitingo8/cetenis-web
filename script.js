@@ -86,6 +86,7 @@ form.addEventListener('submit', async (e) => {
         closeModal();
         resetForm();
         launchConfetti();
+        openSuccessDialog();
     } catch (err) {
         console.error('Contact form error:', err);
         alert('There was a problem sending your message. Please try again or email us at cetenis@cetenis.es');
@@ -104,6 +105,33 @@ function resetForm() {
         t.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
     });
 }
+
+// ── Success dialog (English) ──────────────────────────────────────────────────
+const successDialog      = document.getElementById('successDialog');
+const successDialogClose = document.getElementById('successDialogClose');
+
+function openSuccessDialog() {
+    if (!successDialog) return;
+    successDialog.setAttribute('aria-hidden', 'false');
+    successDialog.classList.add('is-open');
+    successDialogClose?.focus();
+}
+
+function closeSuccessDialog() {
+    if (!successDialog) return;
+    successDialog.setAttribute('aria-hidden', 'true');
+    successDialog.classList.remove('is-open');
+}
+
+successDialogClose?.addEventListener('click', closeSuccessDialog);
+
+successDialog?.querySelector('.success-dialog__backdrop')?.addEventListener('click', closeSuccessDialog);
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && successDialog?.classList.contains('is-open')) {
+        closeSuccessDialog();
+    }
+});
 
 // ── Confetti ──────────────────────────────────────────────────────────────────
 function launchConfetti() {
@@ -167,6 +195,51 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
     });
 });
 
-// ── Ensure video plays ────────────────────────────────────────────────────────
+// ── Video: en móvil Safari/Chrome a veces no arranca el autoplay hasta interacción ──
 const video = document.querySelector('.video-bg');
-if (video) video.play().catch(() => {});
+
+function isMobileViewport() {
+    return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function ensureVideoMutedForAutoplay() {
+    if (!video) return;
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute('muted', '');
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+}
+
+function tryPlayBackgroundVideo() {
+    if (!video) return;
+    ensureVideoMutedForAutoplay();
+    const p = video.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+}
+
+if (video) {
+    ensureVideoMutedForAutoplay();
+
+    // Intento inicial (funciona en muchos móviles si va muted + playsinline)
+    tryPlayBackgroundVideo();
+    video.addEventListener('loadeddata', tryPlayBackgroundVideo, { once: true });
+
+    if (isMobileViewport()) {
+        // Primer toque o clic: desbloquea reproducción si el autoplay falló
+        const kickOnce = () => {
+            tryPlayBackgroundVideo();
+        };
+        document.addEventListener('touchstart', kickOnce, { passive: true, once: true });
+        document.addEventListener('click', kickOnce, { once: true });
+    }
+
+    // Volver de otra pestaña / caché atrás
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') tryPlayBackgroundVideo();
+    });
+    window.addEventListener('pageshow', (e) => {
+        tryPlayBackgroundVideo();
+    });
+}
