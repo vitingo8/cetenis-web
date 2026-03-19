@@ -209,37 +209,73 @@ function ensureVideoMutedForAutoplay() {
     video.setAttribute('muted', '');
     video.playsInline = true;
     video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
 }
 
 function tryPlayBackgroundVideo() {
     if (!video) return;
     ensureVideoMutedForAutoplay();
-    const p = video.play();
-    if (p && typeof p.catch === 'function') p.catch(() => {});
+    
+    // Reiniciar desde el principio si ya estaba en pausa
+    if (video.paused || video.currentTime > 0) {
+        video.currentTime = 0;
+    }
+    
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise
+            .then(() => {
+                console.log('✓ Video autoplay exitoso');
+            })
+            .catch((err) => {
+                console.warn('⚠ Autoplay bloqueado:', err.message);
+            });
+    }
 }
 
 if (video) {
     ensureVideoMutedForAutoplay();
 
-    // Intento inicial (funciona en muchos móviles si va muted + playsinline)
-    tryPlayBackgroundVideo();
+    // Intento 1: Cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryPlayBackgroundVideo);
+    } else {
+        tryPlayBackgroundVideo();
+    }
+
+    // Intento 2: Cuando el video tenga datos listos
     video.addEventListener('loadeddata', tryPlayBackgroundVideo, { once: true });
+    
+    // Intento 3: Cuando el video pueda reproducirse
+    video.addEventListener('canplay', tryPlayBackgroundVideo, { once: true });
 
     if (isMobileViewport()) {
-        // Primer toque o clic: desbloquea reproducción si el autoplay falló
+        // En móvil: desbloquea reproducción al primer toque o clic
         const kickOnce = () => {
+            console.log('📱 Primera interacción en móvil - intentando reproducir video');
             tryPlayBackgroundVideo();
         };
         document.addEventListener('touchstart', kickOnce, { passive: true, once: true });
         document.addEventListener('click', kickOnce, { once: true });
+        
+        // Intento adicional después de un pequeño delay si aún no se reproduce
+        setTimeout(() => {
+            if (video.paused) {
+                console.log('⏱ Timeout: intentando reproducir manualmente');
+                tryPlayBackgroundVideo();
+            }
+        }, 500);
     }
 
-    // Volver de otra pestaña / caché atrás
+    // Volver de otra pestaña o del caché
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') tryPlayBackgroundVideo();
+        if (document.visibilityState === 'visible') {
+            console.log('👁 Página visible nuevamente - reiniciando video');
+            tryPlayBackgroundVideo();
+        }
     });
-    window.addEventListener('pageshow', (e) => {
+    
+    window.addEventListener('pageshow', () => {
+        console.log('📄 Evento pageshow - reiniciando video');
         tryPlayBackgroundVideo();
     });
 }
