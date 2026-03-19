@@ -65,7 +65,7 @@ function apiDevPlugin(env) {
                         const rootDir = process.cwd()
                         const logoAtt = getLogoAttachment(rootDir)
                         const siteUrl = getSiteUrl()
-                        const logoSrc = logoAtt ? 'cid:logo' : `${siteUrl}/logo.png`
+                        const logoSrc = logoAtt ? 'cid:cetenislogo' : `${siteUrl}/logo.png`
                         const html = buildContactEmailHtml(data, { logoSrc })
 
                         const mailOpts = {

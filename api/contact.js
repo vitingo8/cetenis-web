@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     const rootDir = process.cwd();
     const logoAtt = getLogoAttachment(rootDir);
     const siteUrl = getSiteUrl();
-    const logoSrc = logoAtt ? 'cid:logo' : `${siteUrl}/logo.png`;
+    const logoSrc = logoAtt ? 'cid:cetenislogo' : `${siteUrl}/logo.png`;
     const html = buildContactEmailHtml(data, { logoSrc });
 
     const subject = `[CETENIS · Web] ${category} — ${from_name} (${country})`;
