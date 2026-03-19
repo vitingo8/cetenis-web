@@ -15,7 +15,7 @@
 
     <!-- Looping background video -->
     <div class="video-backdrop">
-        <video class="video-bg" autoplay muted loop playsinline preload="auto">
+        <video class="video-bg" autoplay muted loop playsinline webkit-playsinline preload="auto">
             <source src="/cetenis.mp4" type="video/mp4">
         </video>
         <div class="video-overlay"></div>
@@ -46,11 +46,20 @@
         </div>
     </main>
 
-    <!-- Bottom tagline -->
-    <div class="tagline">
-        <span class="tagline-line"></span>
-        <span class="tagline-text">CETENIS | EMPOWERING DATA</span>
-    </div>
+    <!-- Pie de página -->
+    <footer class="site-footer" aria-label="Contacto y marca">
+        <div class="tagline">
+            <span class="tagline-line" aria-hidden="true"></span>
+            <span class="tagline-text">CETENIS | EMPOWERING DATA</span>
+        </div>
+        <div class="footer-contact">
+            <a class="footer-email" href="mailto:cetenis@cetenis.es">cetenis@cetenis.es</a>
+            <div class="footer-phones">
+                <p class="footer-phone"><span class="footer-phone-name">David Espuny</span> <a href="tel:+34667211233">667 211 233</a></p>
+                <p class="footer-phone"><span class="footer-phone-name">Pau Jornet</span> <a href="tel:+34659977072">659 977 072</a></p>
+            </div>
+        </div>
+    </footer>
 
     <!-- Contact Modal -->
     <div id="contactModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">

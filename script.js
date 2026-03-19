@@ -214,12 +214,17 @@ function ensureVideoMutedForAutoplay() {
 function tryPlayBackgroundVideo() {
     if (!video) return;
     ensureVideoMutedForAutoplay();
-    
-    // Reiniciar desde el principio si ya estaba en pausa
-    if (video.paused || video.currentTime > 0) {
+
+    // Si el video no ha cargado aún, forzar carga antes de reproducir
+    if (video.readyState === 0) {
+        video.load();
+    }
+
+    // Solo reiniciar al principio si el video ya había avanzado y está pausado
+    if (video.currentTime > 0 && video.paused) {
         video.currentTime = 0;
     }
-    
+
     const playPromise = video.play();
     if (playPromise && typeof playPromise.catch === 'function') {
         playPromise
@@ -251,19 +256,19 @@ if (video) {
     if (isMobileViewport()) {
         // En móvil: desbloquea reproducción al primer toque o clic
         const kickOnce = () => {
-            console.log('📱 Primera interacción en móvil - intentando reproducir video');
             tryPlayBackgroundVideo();
         };
         document.addEventListener('touchstart', kickOnce, { passive: true, once: true });
         document.addEventListener('click', kickOnce, { once: true });
-        
-        // Intento adicional después de un pequeño delay si aún no se reproduce
-        setTimeout(() => {
-            if (video.paused) {
-                console.log('⏱ Timeout: intentando reproducir manualmente');
-                tryPlayBackgroundVideo();
-            }
-        }, 500);
+
+        // Reintentos escalonados para conexiones lentas en móvil
+        [800, 2000, 4000].forEach((delay) => {
+            setTimeout(() => {
+                if (video.paused) {
+                    tryPlayBackgroundVideo();
+                }
+            }, delay);
+        });
     }
 
     // Volver de otra pestaña o del caché
