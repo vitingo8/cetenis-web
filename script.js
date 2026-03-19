@@ -195,48 +195,92 @@ document.querySelectorAll('a[href^="#"]').forEach(link => {
     });
 });
 
-// ── Video de fondo: autoplay fiable en móvil ──
+// ── Video: en móvil Safari/Chrome a veces no arranca el autoplay hasta interacción ──
 const video = document.querySelector('.video-bg');
 
-if (video) {
-    // Forzar atributos necesarios para autoplay mudo en móvil
+function isMobileViewport() {
+    return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function ensureVideoMutedForAutoplay() {
+    if (!video) return;
     video.muted = true;
     video.defaultMuted = true;
     video.setAttribute('muted', '');
     video.playsInline = true;
     video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
+}
 
-    function playVideo() {
-        if (!video.paused) return;
-        const p = video.play();
-        if (p) p.catch(() => {});
-    }
+function tryPlayBackgroundVideo() {
+    if (!video) return;
+    ensureVideoMutedForAutoplay();
 
-    // Reproducir en cuanto el navegador lo permita
-    video.addEventListener('canplay', playVideo, { once: true });
-    video.addEventListener('loadedmetadata', playVideo, { once: true });
-
-    // Si ya tiene datos suficientes, reproducir ya; si no, forzar carga
-    if (video.readyState >= 2) {
-        playVideo();
-    } else {
+    // Si el video no ha cargado aún, forzar carga antes de reproducir
+    if (video.readyState === 0) {
         video.load();
     }
 
-    // Reintentos escalonados para conexiones lentas
-    [500, 1500, 3000, 6000].forEach((ms) => {
-        setTimeout(() => { if (video.paused) playVideo(); }, ms);
-    });
+    // Solo reiniciar al principio si el video ya había avanzado y está pausado
+    if (video.currentTime > 0 && video.paused) {
+        video.currentTime = 0;
+    }
 
-    // Al volver de otra pestaña o del caché del navegador
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise
+            .then(() => {
+                console.log('✓ Video autoplay exitoso');
+            })
+            .catch((err) => {
+                console.warn('⚠ Autoplay bloqueado:', err.message);
+            });
+    }
+}
+
+if (video) {
+    ensureVideoMutedForAutoplay();
+
+    // Intento 1: Cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', tryPlayBackgroundVideo);
+    } else {
+        tryPlayBackgroundVideo();
+    }
+
+    // Intento 2: Cuando el video tenga datos listos
+    video.addEventListener('loadeddata', tryPlayBackgroundVideo, { once: true });
+    
+    // Intento 3: Cuando el video pueda reproducirse
+    video.addEventListener('canplay', tryPlayBackgroundVideo, { once: true });
+
+    if (isMobileViewport()) {
+        // En móvil: desbloquea reproducción al primer toque o clic
+        const kickOnce = () => {
+            tryPlayBackgroundVideo();
+        };
+        document.addEventListener('touchstart', kickOnce, { passive: true, once: true });
+        document.addEventListener('click', kickOnce, { once: true });
+
+        // Reintentos escalonados para conexiones lentas en móvil
+        [800, 2000, 4000].forEach((delay) => {
+            setTimeout(() => {
+                if (video.paused) {
+                    tryPlayBackgroundVideo();
+                }
+            }, delay);
+        });
+    }
+
+    // Volver de otra pestaña o del caché
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && video.paused) playVideo();
+        if (document.visibilityState === 'visible') {
+            console.log('👁 Página visible nuevamente - reiniciando video');
+            tryPlayBackgroundVideo();
+        }
     });
-    window.addEventListener('pageshow', () => { if (video.paused) playVideo(); });
-
-    // Desbloqueo por gesto de usuario (Android Chrome con política estricta)
-    const unlockOnGesture = () => { if (video.paused) playVideo(); };
-    document.addEventListener('touchstart', unlockOnGesture, { passive: true, once: true });
-    document.addEventListener('click', unlockOnGesture, { once: true });
+    
+    window.addEventListener('pageshow', () => {
+        console.log('📄 Evento pageshow - reiniciando video');
+        tryPlayBackgroundVideo();
+    });
 }
