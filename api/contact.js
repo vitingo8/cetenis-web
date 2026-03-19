@@ -1,4 +1,10 @@
 import nodemailer from 'nodemailer';
+import {
+    buildContactEmailPlain,
+    buildContactEmailHtml,
+    getLogoAttachment,
+    getSiteUrl,
+} from '../lib/contact-email.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -31,27 +37,31 @@ export default async function handler(req, res) {
         },
     });
 
-    const emailBody = `
-New inquiry from the Cetenis website
-─────────────────────────────────────
-Category : ${category}
-Name     : ${from_name}
-Email    : ${from_email}
-Country  : ${country}
+    const data = { category, from_name, from_email, country, message };
+    const text = buildContactEmailPlain(data);
+    const rootDir = process.cwd();
+    const logoAtt = getLogoAttachment(rootDir);
+    const siteUrl = getSiteUrl();
+    const logoSrc = logoAtt ? 'cid:logo' : `${siteUrl}/logo.png`;
+    const html = buildContactEmailHtml(data, { logoSrc });
 
-Message:
-${message}
-─────────────────────────────────────
-    `.trim();
+    const subject = `[CETENIS · Web] ${category} — ${from_name} (${country})`;
+
+    const mailOpts = {
+        from: `"CETENIS Web" <${emailUser}>`,
+        to: 'cetenis@cetenis.es',
+        subject,
+        text,
+        html,
+        replyTo: from_email,
+    };
+
+    if (logoAtt) {
+        mailOpts.attachments = [logoAtt];
+    }
 
     try {
-        await transporter.sendMail({
-            from:     `"Cetenis Web" <${emailUser}>`,
-            to:       'cetenis@cetenis.es',
-            subject:  `[${category}] Inquiry from ${from_name} – ${country}`,
-            text:     emailBody,
-            replyTo:  from_email,
-        });
+        await transporter.sendMail(mailOpts);
 
         return res.status(200).json({ success: true });
     } catch (err) {
